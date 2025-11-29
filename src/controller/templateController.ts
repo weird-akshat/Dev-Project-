@@ -23,5 +23,5 @@ export const generateTemplate = async (
         },
         template: result.template
     }
-
+    return res.status(200).json(response);
 };

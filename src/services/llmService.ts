@@ -3,8 +3,9 @@ import { GoogleGenAI } from "@google/genai";
 import "dotenv/config";
 import { z } from "zod";
 import { Context } from "../types/message";
-import * as fs from "node:fs";
-
+import * as fs from "fs/promises";
+import * as path from 'path';
+const PUBLIC_IMAGE_DIR = path.join(process.cwd(), 'public', 'images');
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY || "" });
 
@@ -122,30 +123,38 @@ async function generateCampaign(prompt: string, context: Context) {
 export { generateCampaign };
 
 async function generateImage(headline: string, prompt: string) {
-    const response = await ai.models.generateImages({
-        model: 'imagen-3.0-generate-002',
-        prompt: 'Robot holding a red skateboard',
-        config: {
-            numberOfImages: 1,
-        },
-    });
-    if (response.generatedImages && response.generatedImages.length > 0) {
-        const img = response.generatedImages[0];
-        if (!img) {
-            throw new Error("No image URL generated");
-        }
-        const imgData = img.image;
-        if (!imgData || !imgData.imageBytes) {
-            throw new Error("No image data generated");
-        }
-        const imgBytes = imgData.imageBytes;
-        const buffer = Buffer.from(imgBytes, "base64");
-        let idx = Date.now();
-        fs.writeFileSync(`imagen-${idx}.png`, buffer);
 
-        return "imagen-${idx}.png";
-    } else {
-        throw new Error("No images generated");
+    const encodedPrompt = encodeURIComponent(`${headline}, ${prompt}`);
+
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+
+    console.log(`Fetching image from: ${url}`);
+
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Image API returned status: ${response.status} ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        let idx = Date.now();
+        const filename = `imagen-${idx}.png`;
+        const serverFilePath = path.join(PUBLIC_IMAGE_DIR, filename);
+
+        await fs.mkdir(PUBLIC_IMAGE_DIR, { recursive: true });
+
+        await fs.writeFile(serverFilePath, buffer);
+
+
+        const publicUrlPath = `/images/${filename}`;
+
+        return publicUrlPath;
+    } catch (error) {
+        console.error("Error generating or saving image:", error);
+        throw error;
     }
 }
 export { generateImage };
