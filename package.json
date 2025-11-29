@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,7 +21,11 @@
   },
   "homepage": "https://github.com/weird-akshat/Dev-Project-#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "@google/genai": "^1.30.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "zod": "^3.22.4",
+    "zod-to-json-schema": "^3.25.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
